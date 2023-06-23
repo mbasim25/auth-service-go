@@ -36,7 +36,7 @@ func (server *Server) createUser(ctx *gin.Context) {
 }
 
 type getUserRequest struct {
-	ID int64 `uri:"id" binding:"requied,min=1"`
+	ID int64 `uri:"id" binding:"required,min=1"`
 }
 
 func (server *Server) getUser(ctx *gin.Context) {
