@@ -8,16 +8,16 @@ import (
 
 	"github.com/mbasim25/void/api"
 	db "github.com/mbasim25/void/db/sqlc"
-)
-
-const (
-	dbDriver      = "postgres"
-	dbSource      = "postgres://postgres:password@localhost:5435/void?sslmode=disable"
-	serverAddress = "0.0.0.0:8081"
+	"github.com/mbasim25/void/util"
 )
 
 func main() {
-	conn, err := sql.Open(dbDriver, dbSource)
+	config, err := util.LoadConfig(".")
+	if err != nil {
+		log.Fatal("could not load env variables", err)
+	}
+
+	conn, err := sql.Open(config.DBDriver, config.DBSource)
 	if err != nil {
 		log.Fatal("could not connect to the db", err)
 	}
@@ -25,7 +25,7 @@ func main() {
 	store := db.NewStore(conn)
 	server := api.NewServer(store)
 
-	err = server.Start(serverAddress)
+	err = server.Start(config.ServerAddress)
 	if err != nil {
 		log.Fatal("could not start server", err)
 	}
