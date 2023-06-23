@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 createdb:
 	docker-compose exec -it db createdb --username=postgres --owner=postgres void
 
@@ -12,6 +14,6 @@ sqlc:
 	sqlc generate
 
 test:
-	go test -v -cover ./...
+	export PATH=/usr/local/go/:$$PATH && go test -v -cover ./...
 
 .PHONY: createdb
