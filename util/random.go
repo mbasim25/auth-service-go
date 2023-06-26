@@ -2,9 +2,12 @@ package util
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"strings"
 	"time"
+
+	"github.com/mbasim25/void/util"
 )
 
 const alphabet = "abcdefghijklmnopqrstuvwxyz"
@@ -36,4 +39,17 @@ func RandomTestStrin() string {
 
 func RandomEmail() string {
 	return fmt.Sprintf("%s@whatever.com", RandomString(4))
+}
+
+func RandomPassword() string {
+	pass := RandomString(6)
+
+	hashedPassword, err := HashPass(pass)
+	if err != nil {
+		log.Fatal("error generating random password")
+		return ""
+
+	}
+
+	return hashedPassword
 }
