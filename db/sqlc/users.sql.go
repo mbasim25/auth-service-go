@@ -10,21 +10,28 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (username, password, role) VALUES ($1, $2, $3) RETURNING id, username, password, role, created_at
+INSERT INTO users (username, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, username, email, password, role, created_at
 `
 
 type CreateUserParams struct {
 	Username string `json:"username"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 	Role     string `json:"role"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, createUser, arg.Username, arg.Password, arg.Role)
+	row := q.db.QueryRowContext(ctx, createUser,
+		arg.Username,
+		arg.Email,
+		arg.Password,
+		arg.Role,
+	)
 	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Username,
+		&i.Email,
 		&i.Password,
 		&i.Role,
 		&i.CreatedAt,
@@ -42,7 +49,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, username, password, role, created_at FROM users WHERE id = $1 LIMIT 1
+SELECT id, username, email, password, role, created_at FROM users WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
@@ -51,6 +58,7 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 	err := row.Scan(
 		&i.ID,
 		&i.Username,
+		&i.Email,
 		&i.Password,
 		&i.Role,
 		&i.CreatedAt,
@@ -59,7 +67,7 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, username, password, role, created_at FROM users ORDER BY id LIMIT $1 OFFSET $2
+SELECT id, username, email, password, role, created_at FROM users ORDER BY id LIMIT $1 OFFSET $2
 `
 
 type ListUsersParams struct {
@@ -79,6 +87,7 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 		if err := rows.Scan(
 			&i.ID,
 			&i.Username,
+			&i.Email,
 			&i.Password,
 			&i.Role,
 			&i.CreatedAt,
