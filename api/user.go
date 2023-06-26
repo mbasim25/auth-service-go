@@ -8,6 +8,7 @@ import (
 	"github.com/lib/pq"
 
 	db "github.com/mbasim25/void/db/sqlc"
+	"github.com/mbasim25/void/util"
 )
 
 type createUserRequest struct {
@@ -23,10 +24,16 @@ func (server *Server) createUser(ctx *gin.Context) {
 		return
 	}
 
+	hashedPassword, err := util.HashPass(req.Password)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
 	arg := db.CreateUserParams{
 		Username: req.Username,
 		Email:    req.Email,
-		Password: req.Password,
+		Password: hashedPassword,
 		Role:     "USER",
 	}
 
