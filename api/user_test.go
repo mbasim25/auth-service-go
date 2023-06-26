@@ -104,6 +104,7 @@ func randomUser() db.User {
 	return db.User{
 		ID:       util.RandomInt(1, 1000),
 		Username: util.RandomString(4),
+		Email:    util.RandomEmail(),
 		Password: util.RandomString(4),
 	}
 }
