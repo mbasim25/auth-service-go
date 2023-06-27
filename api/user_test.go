@@ -239,6 +239,73 @@ func TestCreateUser(t *testing.T) {
 	}
 }
 
+func TestListUsers(t *testing.T) {
+	users := make([]db.User, 5)
+
+	for i := 0; i < 5; i++ {
+		users[i], _ = randomUser(t)
+	}
+
+	type Query struct {
+		PageNumber int32
+		PageSize   int32
+	}
+
+	testCases := []struct {
+		name          string
+		query         Query
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			query: Query{
+				PageNumber: 1,
+				PageSize:   5,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				arg := db.ListUsersParams{
+					Limit:  5,
+					Offset: 0,
+				}
+				store.EXPECT().ListUsers(gomock.Any(), gomock.Eq(arg)).Return(users, nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				requireBodyMatchUsers(t, recorder.Body, users)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			store := mockdb.NewMockStore(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store)
+			recorder := httptest.NewRecorder()
+
+			url := "/"
+			request, err := http.NewRequest(http.MethodGet, url, nil)
+			require.NoError(t, err)
+
+			q := request.URL.Query()
+			q.Add("page_number", fmt.Sprintf("%d", tc.query.PageNumber))
+			q.Add("page_size", fmt.Sprintf("%d", tc.query.PageSize))
+
+			request.URL.RawQuery = q.Encode()
+
+			server.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
 // Helpers
 func randomUser(t *testing.T) (user db.User, password string) {
 	password = util.RandomString(6)
@@ -256,12 +323,22 @@ func requireBodyMatchUser(t *testing.T, body *bytes.Buffer, user db.User) {
 	data, err := ioutil.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotUser db.User
+	var gottenUser db.User
 
-	err = json.Unmarshal(data, &gotUser)
+	err = json.Unmarshal(data, &gottenUser)
 	require.NoError(t, err)
-	require.Equal(t, user.Username, gotUser.Username)
-	require.Equal(t, user.Email, gotUser.Email)
-	require.Equal(t, user.Role, gotUser.Role)
-	require.Empty(t, gotUser.Password)
+	require.Equal(t, user.Username, gottenUser.Username)
+	require.Equal(t, user.Email, gottenUser.Email)
+	require.Equal(t, user.Role, gottenUser.Role)
+	require.Empty(t, gottenUser.Password)
+}
+
+func requireBodyMatchUsers(t *testing.T, body *bytes.Buffer, users []db.User) {
+	data, err := ioutil.ReadAll(body)
+	require.NoError(t, err)
+
+	var gottenUsers []db.User
+	err = json.Unmarshal(data, &gottenUsers)
+	require.NoError(t, err)
+	require.Equal(t, users, gottenUsers)
 }
