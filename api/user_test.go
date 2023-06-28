@@ -163,7 +163,8 @@ func TestCreateUser(t *testing.T) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 				requireBodyMatchUser(t, recorder.Body, user)
 			},
-		}, {
+		},
+		{
 			name: "InternalError",
 			body: gin.H{
 				"username": user.Username,
@@ -179,7 +180,8 @@ func TestCreateUser(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
 			},
-		}, {
+		},
+		{
 			name: "DuplicateEmail",
 			body: gin.H{
 				"username": user.Username,
@@ -195,7 +197,8 @@ func TestCreateUser(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusForbidden, recorder.Code)
 			},
-		}, {
+		},
+		{
 			name: "InvalidUsername",
 			body: gin.H{
 				"username": "(*)&*(&()(&*(",
@@ -210,7 +213,7 @@ func TestCreateUser(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
 			},
-		},
+		}, // TODO: test hash password error
 	}
 
 	for i := range testCases {
@@ -240,10 +243,10 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestListUsers(t *testing.T) {
-	users := make([]db.User, 5)
+	users := make([]db.ListUsersRow, 5)
 
 	for i := 0; i < 5; i++ {
-		users[i], _ = randomUser(t)
+		users[i] = randomUserRows(t)
 	}
 
 	type Query struct {
@@ -273,6 +276,35 @@ func TestListUsers(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 				requireBodyMatchUsers(t, recorder.Body, users)
+			},
+		},
+		{
+			name: "InvalidRequest",
+			query: Query{
+				PageNumber: 0,
+				PageSize:   4,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().ListUsers(gomock.Any(), gomock.Any()).Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "InternalServerError",
+			query: Query{
+				PageNumber: 1,
+				PageSize:   8,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					ListUsers(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return([]db.ListUsersRow{}, sql.ErrConnDone)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
 			},
 		},
 	}
@@ -319,6 +351,14 @@ func randomUser(t *testing.T) (user db.User, password string) {
 	return user, password
 }
 
+func randomUserRows(t *testing.T) db.ListUsersRow {
+	return db.ListUsersRow{
+		ID:       util.RandomInt(1, 1000),
+		Username: util.RandomString(4),
+		Email:    util.RandomEmail(),
+	}
+}
+
 func requireBodyMatchUser(t *testing.T, body *bytes.Buffer, user db.User) {
 	data, err := ioutil.ReadAll(body)
 	require.NoError(t, err)
@@ -333,11 +373,11 @@ func requireBodyMatchUser(t *testing.T, body *bytes.Buffer, user db.User) {
 	require.Empty(t, gottenUser.Password)
 }
 
-func requireBodyMatchUsers(t *testing.T, body *bytes.Buffer, users []db.User) {
+func requireBodyMatchUsers(t *testing.T, body *bytes.Buffer, users []db.ListUsersRow) {
 	data, err := ioutil.ReadAll(body)
 	require.NoError(t, err)
 
-	var gottenUsers []db.User
+	var gottenUsers []db.ListUsersRow
 	err = json.Unmarshal(data, &gottenUsers)
 	require.NoError(t, err)
 	require.Equal(t, users, gottenUsers)
