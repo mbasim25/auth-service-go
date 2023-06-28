@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/mbasim25/void/util"
+	"github.com/mbasim25/ticketing-app-microservices/util"
 )
 
 func createRandomUser(t *testing.T) User {

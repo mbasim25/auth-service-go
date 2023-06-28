@@ -16,9 +16,9 @@ import (
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 
-	mockdb "github.com/mbasim25/void/db/mock"
-	db "github.com/mbasim25/void/db/sqlc"
-	"github.com/mbasim25/void/util"
+	mockdb "github.com/mbasim25/ticketing-app-microservices/db/mock"
+	db "github.com/mbasim25/ticketing-app-microservices/db/sqlc"
+	"github.com/mbasim25/ticketing-app-microservices/util"
 )
 
 func TestGetUser(t *testing.T) {
@@ -199,6 +199,22 @@ func TestCreateUser(t *testing.T) {
 			},
 		},
 		{
+			name: "InvalidEmail",
+			body: gin.H{
+				"username": user.Username,
+				"password": password,
+				"email":    "invalid email",
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					GetUser(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
 			name: "InvalidUsername",
 			body: gin.H{
 				"username": "(*)&*(&()(&*(",
@@ -213,7 +229,23 @@ func TestCreateUser(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
 			},
-		}, // TODO: test hash password error
+		},
+		{
+			name: "PasswordTooShort",
+			body: gin.H{
+				"username": user.Username,
+				"password": "123",
+				"email":    user.Email,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					GetUser(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
 	}
 
 	for i := range testCases {

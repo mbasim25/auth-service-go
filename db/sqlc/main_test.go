@@ -8,7 +8,7 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"github.com/mbasim25/void/util"
+	"github.com/mbasim25/ticketing-app-microservices/util"
 )
 
 var testQueries *Queries

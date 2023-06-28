@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	db "github.com/mbasim25/void/db/sqlc"
+	db "github.com/mbasim25/ticketing-app-microservices/db/sqlc"
 )
 
 func TestMain(m *testing.M) {

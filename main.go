@@ -6,9 +6,9 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"github.com/mbasim25/void/api"
-	db "github.com/mbasim25/void/db/sqlc"
-	"github.com/mbasim25/void/util"
+	"github.com/mbasim25/ticketing-app-microservices/api"
+	db "github.com/mbasim25/ticketing-app-microservices/db/sqlc"
+	"github.com/mbasim25/ticketing-app-microservices/util"
 )
 
 func main() {

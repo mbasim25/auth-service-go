@@ -8,8 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
 
-	db "github.com/mbasim25/void/db/sqlc"
-	"github.com/mbasim25/void/util"
+	db "github.com/mbasim25/ticketing-app-microservices/db/sqlc"
+	"github.com/mbasim25/ticketing-app-microservices/util"
 )
 
 type createUserRequest struct {

@@ -3,7 +3,7 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 
-	db "github.com/mbasim25/void/db/sqlc"
+	db "github.com/mbasim25/ticketing-app-microservices/db/sqlc"
 )
 
 type Server struct {
