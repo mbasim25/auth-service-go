@@ -17,6 +17,6 @@ test:
 	export PATH=/usr/local/go/:$$PATH && go test -v -cover ./...
 
 mock:
-	mockgen -package mockdb -destination db/mock/store.go github.com/mbasim25/void/db/sqlc Store
+	mockgen -package mockdb -destination db/mock/store.go github.com/mbasim25/ticketing-app-microservices/db/sqlc Store
 
 .PHONY: createdb dropdb migrate sqlc test mock
